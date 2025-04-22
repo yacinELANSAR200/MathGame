@@ -1,0 +1,284 @@
+#include <iostream>
+#include <cstdlib>  
+#include <ctime>
+#include <string>
+using namespace std;
+
+
+enum enQuestionLevel { Easy = 1, Medium = 2, Hard = 3, Mix = 4 };
+
+enum enOperationType { Add = 1, Sub = 2, Mul = 3, Div = 4, MixOp=5 };
+
+enum enAnswer { Right = 1, Wrong = 2 };
+
+enum enFinalDecision { Pass = 1, Fail = 2 };
+
+struct stGameResult {
+    short QuestionsNumber = 0;
+    short NumberOfRightAnswers;
+    short NumberOfWrongAnswers;
+    string QuestionLevelName;
+    string opTypeString;
+    char OpTypeCharacter;
+    string FinalDecision;
+};
+
+short ReadPositiveNumberInRange(string Message, short From, short To) {
+    short number = 0;
+    do
+    {
+        cout << Message;
+        cin >> number;
+    } while (number < 0 || number<From || number>To);
+    return number;
+}
+
+enQuestionLevel ReadUserChoiceQuestionLevel(short From, short To) {
+    string Message = "Enter Question Level [1]Easy [2]Medium [3]Hard [4]Mix ? ";
+    return (enQuestionLevel)ReadPositiveNumberInRange(Message,From,To);
+}
+
+enOperationType ReadUserOperationType(short From, short To) {
+    string Message = "Enter Operation Type [1]Add  [2]Sub  [3]Mul  [4]Div  [5]Mix ? ";
+    return (enOperationType)ReadPositiveNumberInRange(Message, From, To);
+}
+
+int ReadAnswerUser() {
+    int Result=0;
+    cin >> Result;
+    return Result;
+}
+
+int RandomNumber(int From, int To) {
+    int RandNum = rand() % (To + 1 - From) + From;
+    return RandNum;
+}
+
+int GenerateRandomNumberOnDependsOnLevel(enQuestionLevel QuestionLevel) {
+    switch (QuestionLevel)
+    {
+    case Easy:return RandomNumber(1, 10);
+        break;
+    case Medium:return RandomNumber(30, 50);
+        break;
+    case Hard:return RandomNumber(70, 100);
+        break;
+    case Mix:return RandomNumber(1, 100);
+        break;
+    default:
+        break;
+    }
+}
+
+int CalculateResultOnDependsOnOpType(enOperationType OperationType, char opType,int Number1, int Number2) {
+
+    switch (OperationType)
+    {
+    case Add:return (int)Number1 + Number2;
+        break;
+    case Sub:return (int)Number1 - Number2;
+        break;
+    case Mul:return (int)Number1 * Number2;
+        break;
+    case Div:return (int)Number1 / Number2;
+        break;   
+    case MixOp:
+        if (opType == '+')
+        {
+            return (int)Number1 + Number2;
+        }
+        else if (opType == '-') {
+            return (int)Number1 - Number2;
+        }
+        else if (opType == '*') {
+            return (int)Number1 * Number2;
+        }
+        else {
+            return (int)Number1 / Number2;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+char GetOperator(enOperationType opType) {
+    char operators[4] = { '+' ,'-' ,'*' ,'/' };
+    int Number = RandomNumber(1, 4);
+    switch (opType)
+    {
+    case Add:return '+';
+        break;
+    case Sub:return '-';
+        break;
+    case Mul:return '*';
+        break;
+    case Div:return '/';
+        break;
+    case MixOp:return operators[Number - 1];
+        break;
+    default:
+        break;
+    }
+}
+
+string GetQuestionLevel(enQuestionLevel QuestionLevel) {
+    switch (QuestionLevel)
+    {
+    case Easy:return "Easy";
+        break;
+    case Medium:return "Medium";
+        break;
+    case Hard:return "Hard";
+        break;
+    case Mix: return "Mix";
+    default:
+        break;
+    }
+}
+
+enFinalDecision GetFinalDecision(short NumberOfRightAnswers, short NumberOfWrongAnswers) {
+    if (NumberOfRightAnswers>NumberOfWrongAnswers)
+    {
+        return enFinalDecision::Pass;
+    }
+    else {
+        return enFinalDecision::Fail;
+    }
+}
+
+enAnswer CheckAnswer(int UserAnswer, int CalculateAnswer) {
+    if (UserAnswer == CalculateAnswer)
+        return enAnswer::Right;
+    else
+        return enAnswer::Wrong;
+
+}
+
+void SetScreenColor(enAnswer Answer) {
+    switch (Answer) {
+    case enAnswer::Right:
+        system("color 2F");
+        break;
+    case  enAnswer::Wrong:
+        system("color 4F");
+        cout << "\a";
+        break;
+    }
+}
+
+stGameResult FillGameResult(short NumberOfQuestions, enQuestionLevel QuestionLevel, enOperationType OpType, short NumberOfRightAnswers, short NumberOfWrongAnswers,string FinalDecision) {
+    
+    stGameResult GameResult;
+
+    GameResult.QuestionsNumber = NumberOfQuestions;
+    GameResult.NumberOfRightAnswers = NumberOfRightAnswers;
+    GameResult.NumberOfWrongAnswers = NumberOfWrongAnswers;
+    if (OpType == enOperationType::MixOp) {
+        GameResult.opTypeString = "Mix";
+    }
+    else {
+        GameResult.OpTypeCharacter = GetOperator(OpType);
+    }
+    GameResult.QuestionLevelName = GetQuestionLevel(QuestionLevel);
+    GameResult.FinalDecision = FinalDecision;
+
+    return GameResult;
+}
+
+stGameResult   PlayGame(short NumberOfQuestions, enQuestionLevel QuestionLevel, enOperationType opType) {
+    short RightAnswers = 0, WrongAnswers = 0;
+    string FinalDecision = " ";
+    char op = ' ';
+    for (short QuestionsNumber  = 1; QuestionsNumber <= NumberOfQuestions; QuestionsNumber++)
+    {
+        int Number1 = GenerateRandomNumberOnDependsOnLevel(QuestionLevel); 
+        int Number2 = GenerateRandomNumberOnDependsOnLevel(QuestionLevel);
+        op = GetOperator(opType);
+        cout << "\nQuestion [" << QuestionsNumber << "/"<< NumberOfQuestions << "]" << endl;
+        cout << Number1<<endl;
+        cout << Number2 << op;
+        cout << "\n___________________\n";
+        int UserAnswer=ReadAnswerUser();
+        int CalculateAnswer =CalculateResultOnDependsOnOpType(opType, op,Number1, Number2);
+        if (CheckAnswer(UserAnswer, CalculateAnswer)==enAnswer::Right)
+        {
+            RightAnswers++; 
+            SetScreenColor(enAnswer::Right);
+            cout << "\nRight Answer :-)\n";
+           
+        }
+        else {
+            WrongAnswers++;
+            SetScreenColor(enAnswer::Wrong);
+            cout << "\nWrong Answer :-(\n";
+            cout << "The right answer is: " << CalculateAnswer << endl;
+        };
+        
+    }
+    if (GetFinalDecision(RightAnswers, WrongAnswers) == enFinalDecision::Pass) {
+        FinalDecision = "Pass :-)";
+    }
+    else
+    {
+        FinalDecision = "Fail :-(";
+    }
+    return FillGameResult(NumberOfQuestions,QuestionLevel,opType, RightAnswers, WrongAnswers, FinalDecision);
+}
+
+void PrintFinalResult(stGameResult GameResults,enOperationType OpType) {
+    
+    cout << "\n__________________________________\n";
+    cout << "\n\tFinal Result is " << GameResults.FinalDecision << "\n";
+    cout << "__________________________________\n";
+    cout << "\nNumber Of Questions: " << GameResults.QuestionsNumber << "\n";
+    cout << "Question Level: " << GameResults.QuestionLevelName << "\n";
+    cout << "OpType: ";
+        if (OpType == enOperationType::MixOp) {
+            cout <<GameResults.opTypeString;
+        }
+        else {
+            cout<<GameResults.OpTypeCharacter;
+        }
+         
+    cout << "\nNumber of right Answers: " <<GameResults.NumberOfRightAnswers << "\n";
+    cout << "Number of wrong Answers: "<<GameResults.NumberOfWrongAnswers << "\n";
+    
+}
+
+short ReadHowManyQuestions() {
+    short NumberOfQuestions = 0;
+    do
+    {
+        cout << "How Many Questions do you want to answer? ";
+        cin >> NumberOfQuestions;
+    } while (NumberOfQuestions < 1);
+    return NumberOfQuestions;
+}
+
+void ResetScreen() {
+    system("cls");
+    system("color 0F");
+}
+
+void StartGame() {
+    char PlayAgain = ' ';
+    do
+    {
+        ResetScreen();
+        short NumberOfQuestions = ReadHowManyQuestions();
+        enQuestionLevel QuestionLevel = ReadUserChoiceQuestionLevel(1, 4);
+        enOperationType opType = ReadUserOperationType(1, 5);
+        stGameResult GameResult = PlayGame(NumberOfQuestions, QuestionLevel, opType);
+        PrintFinalResult(GameResult,opType);
+        cout << endl << "\t\t" << "Do you want to play again? Y/N? "; 
+        cin >> PlayAgain;
+    } while (PlayAgain == 'Y' || PlayAgain == 'y');
+}
+
+int main()
+{
+    srand((unsigned)time(NULL));
+    StartGame();
+}
+
